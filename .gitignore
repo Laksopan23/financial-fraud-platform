@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+.env
+infra/keycloak/generated/
+artifacts/
+TestResults/
+*.user
+.vs/
+**/__pycache__/
+*.pyc

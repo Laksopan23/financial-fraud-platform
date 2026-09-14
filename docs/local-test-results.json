@@ -1,0 +1,30 @@
+{
+  "kind": "python-tools-and-lua-logic-only",
+  "executedAtUtc": "2026-09-13T11:38:42.871586+00:00",
+  "python": "3.12.14",
+  "testsRun": 14,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "successful": true,
+  "luaExecution": "Native Lua 5.4 shared library with deterministic Redis/CJSON test doubles",
+  "csharpCompiled": false,
+  "realRedisExecuted": false,
+  "dockerExecuted": false,
+  "testCases": [
+    "test_dev_tools.DevToolsTests.test_binary_encoder_has_correct_network_order_and_boundaries",
+    "test_dev_tools.DevToolsTests.test_compose_credentials_are_all_generated",
+    "test_dev_tools.DevToolsTests.test_generator_refuses_to_overwrite_existing_keys",
+    "test_dev_tools.DevToolsTests.test_generator_uses_unique_secrets_and_independent_256_bit_keys",
+    "test_dev_tools.DevToolsTests.test_keycloak_clients_have_explicit_role_and_tenant_claims",
+    "test_dev_tools.DevToolsTests.test_keycloak_health_command_handles_ready_and_unready_status",
+    "test_feature_script.FeatureScriptTests.test_baseline_snapshot_excludes_the_current_amount",
+    "test_feature_script.FeatureScriptTests.test_changed_payload_is_rejected_before_writes",
+    "test_feature_script.FeatureScriptTests.test_duplicate_uses_same_snapshot_without_changing_state",
+    "test_feature_script.FeatureScriptTests.test_late_event_does_not_rewind_geolocation",
+    "test_feature_script.FeatureScriptTests.test_legacy_snapshot_cannot_be_recounted",
+    "test_feature_script.FeatureScriptTests.test_malformed_snapshot_cannot_be_recounted",
+    "test_feature_script.FeatureScriptTests.test_rolling_windows_exclude_the_exact_lower_boundary",
+    "test_feature_script.FeatureScriptTests.test_wrong_key_types_never_partially_update_features"
+  ]
+}
