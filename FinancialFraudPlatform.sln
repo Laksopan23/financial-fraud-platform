@@ -1,0 +1,114 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.Core", "src\BuildingBlocks\FinancialFraudPlatform.Core\FinancialFraudPlatform.Core.csproj", "{D8BC002C-CA09-50F3-B648-AA35A647C734}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.EventBus", "src\BuildingBlocks\FinancialFraudPlatform.EventBus\FinancialFraudPlatform.EventBus.csproj", "{0D7FB5FC-036F-544C-9593-3D9778F1628E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.Audit.Ledger", "src\Services\Audit\FinancialFraudPlatform.Audit.Ledger\FinancialFraudPlatform.Audit.Ledger.csproj", "{61600FF6-B032-5730-9BF0-68B69BD4BCF8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.Detection.FeatureStore", "src\Services\Detection\FinancialFraudPlatform.Detection.FeatureStore\FinancialFraudPlatform.Detection.FeatureStore.csproj", "{4DEAE275-4701-54B9-BAD0-874F1E4F91A2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.Detection.ML", "src\Services\Detection\FinancialFraudPlatform.Detection.ML\FinancialFraudPlatform.Detection.ML.csproj", "{FB610E9D-F059-59E8-ADAD-19F307AB95FC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.Detection.Worker", "src\Services\Detection\FinancialFraudPlatform.Detection.Worker\FinancialFraudPlatform.Detection.Worker.csproj", "{C2B0C420-105B-554E-8E40-CB025A8AF404}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.Ingestion.API", "src\Services\Ingestion\FinancialFraudPlatform.Ingestion.API\FinancialFraudPlatform.Ingestion.API.csproj", "{2037B2F5-E41F-5440-9425-C43DC4C0FF8C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.Ingestion.Application", "src\Services\Ingestion\FinancialFraudPlatform.Ingestion.Application\FinancialFraudPlatform.Ingestion.Application.csproj", "{E47502C3-9006-56B9-AF5D-A7EF91DD87DB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.Ingestion.Domain", "src\Services\Ingestion\FinancialFraudPlatform.Ingestion.Domain\FinancialFraudPlatform.Ingestion.Domain.csproj", "{FD7945AD-F1FB-5F58-8F8F-9B84181B9509}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.Security.Shield", "src\Services\Security\FinancialFraudPlatform.Security.Shield\FinancialFraudPlatform.Security.Shield.csproj", "{68E0328A-8684-5321-881D-5C26C68F98B6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.Dashboard.Blazor", "src\Web\FinancialFraudPlatform.Dashboard.Blazor\FinancialFraudPlatform.Dashboard.Blazor.csproj", "{6287B28C-6443-5274-8089-E41EFE0CAA78}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.IntegrationTests", "tests\FinancialFraudPlatform.IntegrationTests\FinancialFraudPlatform.IntegrationTests.csproj", "{857C6451-FA3A-5667-8B28-DE7DDD989958}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.UnitTests", "tests\FinancialFraudPlatform.UnitTests\FinancialFraudPlatform.UnitTests.csproj", "{07FE94BE-C3F1-5FED-9598-8F62625CE24B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.HealthProbe", "tools\FinancialFraudPlatform.HealthProbe\FinancialFraudPlatform.HealthProbe.csproj", "{1A7639CC-F25A-5F65-9778-B39465B8D5E7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.InferenceBenchmark", "tools\FinancialFraudPlatform.InferenceBenchmark\FinancialFraudPlatform.InferenceBenchmark.csproj", "{6417A8DD-BEF8-59D4-8D1F-9F63042AFFBD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.ModelTraining", "tools\FinancialFraudPlatform.ModelTraining\FinancialFraudPlatform.ModelTraining.csproj", "{2825DEF8-9638-52BA-8723-5DF3BB3B85C2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancialFraudPlatform.NativeParser", "tools\FinancialFraudPlatform.NativeParser\FinancialFraudPlatform.NativeParser.csproj", "{A59771E2-A216-5632-81F0-47FFCB8F425F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D8BC002C-CA09-50F3-B648-AA35A647C734}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8BC002C-CA09-50F3-B648-AA35A647C734}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8BC002C-CA09-50F3-B648-AA35A647C734}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8BC002C-CA09-50F3-B648-AA35A647C734}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D7FB5FC-036F-544C-9593-3D9778F1628E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D7FB5FC-036F-544C-9593-3D9778F1628E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D7FB5FC-036F-544C-9593-3D9778F1628E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D7FB5FC-036F-544C-9593-3D9778F1628E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61600FF6-B032-5730-9BF0-68B69BD4BCF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61600FF6-B032-5730-9BF0-68B69BD4BCF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61600FF6-B032-5730-9BF0-68B69BD4BCF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61600FF6-B032-5730-9BF0-68B69BD4BCF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DEAE275-4701-54B9-BAD0-874F1E4F91A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DEAE275-4701-54B9-BAD0-874F1E4F91A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DEAE275-4701-54B9-BAD0-874F1E4F91A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DEAE275-4701-54B9-BAD0-874F1E4F91A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB610E9D-F059-59E8-ADAD-19F307AB95FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB610E9D-F059-59E8-ADAD-19F307AB95FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB610E9D-F059-59E8-ADAD-19F307AB95FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB610E9D-F059-59E8-ADAD-19F307AB95FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2B0C420-105B-554E-8E40-CB025A8AF404}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2B0C420-105B-554E-8E40-CB025A8AF404}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2B0C420-105B-554E-8E40-CB025A8AF404}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2B0C420-105B-554E-8E40-CB025A8AF404}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2037B2F5-E41F-5440-9425-C43DC4C0FF8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2037B2F5-E41F-5440-9425-C43DC4C0FF8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2037B2F5-E41F-5440-9425-C43DC4C0FF8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2037B2F5-E41F-5440-9425-C43DC4C0FF8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E47502C3-9006-56B9-AF5D-A7EF91DD87DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E47502C3-9006-56B9-AF5D-A7EF91DD87DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E47502C3-9006-56B9-AF5D-A7EF91DD87DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E47502C3-9006-56B9-AF5D-A7EF91DD87DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD7945AD-F1FB-5F58-8F8F-9B84181B9509}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD7945AD-F1FB-5F58-8F8F-9B84181B9509}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD7945AD-F1FB-5F58-8F8F-9B84181B9509}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD7945AD-F1FB-5F58-8F8F-9B84181B9509}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68E0328A-8684-5321-881D-5C26C68F98B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68E0328A-8684-5321-881D-5C26C68F98B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68E0328A-8684-5321-881D-5C26C68F98B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68E0328A-8684-5321-881D-5C26C68F98B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6287B28C-6443-5274-8089-E41EFE0CAA78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6287B28C-6443-5274-8089-E41EFE0CAA78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6287B28C-6443-5274-8089-E41EFE0CAA78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6287B28C-6443-5274-8089-E41EFE0CAA78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{857C6451-FA3A-5667-8B28-DE7DDD989958}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{857C6451-FA3A-5667-8B28-DE7DDD989958}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{857C6451-FA3A-5667-8B28-DE7DDD989958}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{857C6451-FA3A-5667-8B28-DE7DDD989958}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07FE94BE-C3F1-5FED-9598-8F62625CE24B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07FE94BE-C3F1-5FED-9598-8F62625CE24B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07FE94BE-C3F1-5FED-9598-8F62625CE24B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07FE94BE-C3F1-5FED-9598-8F62625CE24B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A7639CC-F25A-5F65-9778-B39465B8D5E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A7639CC-F25A-5F65-9778-B39465B8D5E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A7639CC-F25A-5F65-9778-B39465B8D5E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A7639CC-F25A-5F65-9778-B39465B8D5E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6417A8DD-BEF8-59D4-8D1F-9F63042AFFBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6417A8DD-BEF8-59D4-8D1F-9F63042AFFBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6417A8DD-BEF8-59D4-8D1F-9F63042AFFBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6417A8DD-BEF8-59D4-8D1F-9F63042AFFBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2825DEF8-9638-52BA-8723-5DF3BB3B85C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2825DEF8-9638-52BA-8723-5DF3BB3B85C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2825DEF8-9638-52BA-8723-5DF3BB3B85C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2825DEF8-9638-52BA-8723-5DF3BB3B85C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A59771E2-A216-5632-81F0-47FFCB8F425F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A59771E2-A216-5632-81F0-47FFCB8F425F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A59771E2-A216-5632-81F0-47FFCB8F425F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A59771E2-A216-5632-81F0-47FFCB8F425F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
