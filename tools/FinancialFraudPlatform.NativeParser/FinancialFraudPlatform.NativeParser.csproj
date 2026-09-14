@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PublishAot Condition="'$(EnableNativeAot)' == 'true'">true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Services/Ingestion/FinancialFraudPlatform.Ingestion.Domain/FinancialFraudPlatform.Ingestion.Domain.csproj" />
+    <Compile Include="../../src/Services/Ingestion/FinancialFraudPlatform.Ingestion.Application/BinaryTransactionParser.cs" Link="BinaryTransactionParser.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,63 @@
+name: Verify fraud platform
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Source and Lua regression checks
+        env:
+          FF_REQUIRE_LUA: '1'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes liblua5.4-0
+          python3 -m pip install -r scripts/requirements-dev.txt
+          python3 scripts/validate_structure.py
+          python3 -m unittest discover -s scripts -p 'test_*.py' -v
+          bash -n infra/postgres/init.sh scripts/verify.sh
+      - name: Restore and reject high or critical vulnerable dependencies
+        run: dotnet restore FinancialFraudPlatform.sln
+      - name: Build
+        run: dotnet build FinancialFraudPlatform.sln -c Release --no-restore
+      - name: Unit tests
+        run: dotnet test tests/FinancialFraudPlatform.UnitTests -c Release --no-build --logger trx
+      - name: Integration tests with Docker
+        run: dotnet test tests/FinancialFraudPlatform.IntegrationTests -c Release --no-build --logger trx
+      - name: Train and verify ONNX parity
+        run: dotnet run --project tools/FinancialFraudPlatform.ModelTraining -c Release --no-build -- --demo --out artifacts/model
+      - name: Record latency benchmark
+        run: dotnet run --project tools/FinancialFraudPlatform.InferenceBenchmark -c Release --no-build -- --model artifacts/model/model.onnx --allow-synthetic --max-p99-ms 15 --out artifacts/benchmark.json
+      - name: Build Native AOT parser
+        run: dotnet publish tools/FinancialFraudPlatform.NativeParser -c Release -r linux-x64 -p:EnableNativeAot=true -o artifacts/native
+      - name: Compose validation
+        run: |
+          python3 scripts/dev_setup.py
+          docker compose config --quiet
+      - name: End-to-end stack smoke test
+        run: |
+          docker compose up --build --wait --wait-timeout 300
+          python3 scripts/smoke.py
+      - name: Stop containers
+        if: always()
+        run: docker compose down
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-results
+          path: |
+            docs/structure-validation.json
+            artifacts/model/evaluation.json
+            artifacts/model/manifest.json
+            artifacts/benchmark.json
+            tests/**/TestResults/*.trx
