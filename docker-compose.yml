@@ -1,0 +1,424 @@
+name: financial-fraud-platform
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: platform_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run dev_setup.py}
+      INGESTION_DB_PASSWORD: ${INGESTION_DB_PASSWORD:?Run dev_setup.py}
+      DETECTION_DB_PASSWORD: ${DETECTION_DB_PASSWORD:?Run dev_setup.py}
+      AUDIT_DB_PASSWORD: ${AUDIT_DB_PASSWORD:?Run dev_setup.py}
+      DASHBOARD_DB_PASSWORD: ${DASHBOARD_DB_PASSWORD:?Run dev_setup.py}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?Run dev_setup.py}
+    volumes:
+    - postgres-data:/var/lib/postgresql/data
+    - ./infra/postgres/init.sh:/docker-entrypoint-initdb.d/10-databases.sh:ro
+    networks:
+    - backend
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - pg_isready -U platform_admin -d postgres
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  redis:
+    image: redis:7.4-alpine
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Run dev_setup.py}
+    command:
+    - sh
+    - -c
+    - exec redis-server --appendonly yes --appendfsync everysec --maxmemory-policy noeviction --requirepass "$$REDIS_PASSWORD"
+    volumes:
+    - redis-data:/data
+    networks:
+    - backend
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep -q PONG
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  rabbitmq:
+    image: rabbitmq:4-management
+    environment:
+      RABBITMQ_DEFAULT_USER: fraud
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Run dev_setup.py}
+    volumes:
+    - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+    - backend
+    - edge
+    ports:
+    - 127.0.0.1:15672:15672
+    healthcheck:
+      test:
+      - CMD
+      - rabbitmq-diagnostics
+      - -q
+      - ping
+      interval: 5s
+      timeout: 10s
+      retries: 20
+    restart: unless-stopped
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.3
+    command:
+    - start-dev
+    - --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Run dev_setup.py}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?Run dev_setup.py}
+      KC_HOSTNAME: http://localhost:8080
+      KC_HEALTH_ENABLED: 'true'
+    volumes:
+    - ./infra/keycloak/generated/fraud-realm.json:/opt/keycloak/data/import/fraud-realm.json:ro
+    networks:
+    - backend
+    - edge
+    ports:
+    - 127.0.0.1:8080:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - bash
+      - -ec
+      - 'exec 3<>/dev/tcp/127.0.0.1/9000; printf "GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3; read -r status
+        <&3; [[ "$$status" == *" 200 "* ]]'
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.129.1
+    command:
+    - --config=/etc/otelcol/config.yml
+    volumes:
+    - ./infra/otel/collector.yml:/etc/otelcol/config.yml:ro
+    networks:
+    - observability
+    restart: unless-stopped
+  tempo:
+    image: grafana/tempo:2.8.2
+    command:
+    - -config.file=/etc/tempo.yml
+    volumes:
+    - ./infra/tempo/tempo.yml:/etc/tempo.yml:ro
+    tmpfs:
+    - /tmp:rw,nosuid,size=256m,mode=1777
+    networks:
+    - observability
+    restart: unless-stopped
+  prometheus:
+    image: prom/prometheus:v3.14.0
+    volumes:
+    - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    - ./infra/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+    - prometheus-data:/prometheus
+    networks:
+    - observability
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana:13.2.1
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?Run dev_setup.py}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    volumes:
+    - grafana-data:/var/lib/grafana
+    - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+    - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+    - 127.0.0.1:3000:3000
+    networks:
+    - observability
+    - edge
+    restart: unless-stopped
+  ingestion:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT: src/Services/Ingestion/FinancialFraudPlatform.Ingestion.API/FinancialFraudPlatform.Ingestion.API.csproj
+    image: financial-fraud-ingestion:dev
+    command:
+    - FinancialFraudPlatform.Ingestion.API.dll
+    networks:
+    - backend
+    - observability
+    - edge
+    read_only: true
+    tmpfs:
+    - /tmp:rw,nosuid,size=128m
+    security_opt:
+    - no-new-privileges:true
+    cap_drop:
+    - ALL
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ENVIRONMENT: Development
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: fraud
+      RabbitMQ__Password: ${RABBITMQ_PASSWORD:?Run dev_setup.py}
+      Identity__Authority: http://localhost:8080/realms/fraud
+      Identity__InternalOrigin: http://keycloak:8080
+      Identity__Audience: fraud-platform
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      ConnectionStrings__Postgres: Host=postgres;Database=ingestion;Username=ingestion;Password=${INGESTION_DB_PASSWORD:?Run dev_setup.py};Maximum
+        Pool Size=80
+      Keys__Encryption__ActiveId: dev-v1
+      Keys__Encryption__Versions__dev-v1: ${ENCRYPTION_KEY:?Run dev_setup.py}
+      Keys__Tokenization: ${TOKENIZATION_KEY:?Run dev_setup.py}
+      Merchants__demo-shop__Risk: '0.1'
+      Merchants__high-risk-shop__Risk: '0.95'
+      Kestrel__Endpoints__Rest__Url: http://+:8080
+      Kestrel__Endpoints__Rest__Protocols: Http1
+      Kestrel__Endpoints__Grpc__Url: http://+:8081
+      Kestrel__Endpoints__Grpc__Protocols: Http2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      detection:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - dotnet
+      - /health/FinancialFraudPlatform.HealthProbe.dll
+      - http://localhost:8080/health/ready
+      interval: 10s
+      timeout: 8s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+    ports:
+    - 127.0.0.1:8082:8080
+    - 127.0.0.1:50051:8081
+  detection:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT: src/Services/Detection/FinancialFraudPlatform.Detection.Worker/FinancialFraudPlatform.Detection.Worker.csproj
+    image: financial-fraud-detection:dev
+    command:
+    - FinancialFraudPlatform.Detection.Worker.dll
+    networks:
+    - backend
+    - observability
+    read_only: true
+    tmpfs:
+    - /tmp:rw,nosuid,size=128m
+    security_opt:
+    - no-new-privileges:true
+    cap_drop:
+    - ALL
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ENVIRONMENT: Development
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: fraud
+      RabbitMQ__Password: ${RABBITMQ_PASSWORD:?Run dev_setup.py}
+      Identity__Authority: http://localhost:8080/realms/fraud
+      Identity__InternalOrigin: http://keycloak:8080
+      Identity__Audience: fraud-platform
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      ConnectionStrings__Postgres: Host=postgres;Database=detection;Username=detection;Password=${DETECTION_DB_PASSWORD:?Run dev_setup.py};Maximum
+        Pool Size=80
+      ConnectionStrings__Redis: redis:6379,password=${REDIS_PASSWORD:?Run dev_setup.py},abortConnect=false
+      Model__Path: /models/model.onnx
+      Model__AllowSynthetic: 'true'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      model-init:
+        condition: service_completed_successfully
+      audit:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - dotnet
+      - /health/FinancialFraudPlatform.HealthProbe.dll
+      - http://localhost:8080/health/ready
+      interval: 10s
+      timeout: 8s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+    volumes:
+    - model-data:/models:ro
+  audit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT: src/Services/Audit/FinancialFraudPlatform.Audit.Ledger/FinancialFraudPlatform.Audit.Ledger.csproj
+    image: financial-fraud-audit:dev
+    command:
+    - FinancialFraudPlatform.Audit.Ledger.dll
+    networks:
+    - backend
+    - observability
+    - edge
+    read_only: true
+    tmpfs:
+    - /tmp:rw,nosuid,size=128m
+    security_opt:
+    - no-new-privileges:true
+    cap_drop:
+    - ALL
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ENVIRONMENT: Development
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: fraud
+      RabbitMQ__Password: ${RABBITMQ_PASSWORD:?Run dev_setup.py}
+      Identity__Authority: http://localhost:8080/realms/fraud
+      Identity__InternalOrigin: http://keycloak:8080
+      Identity__Audience: fraud-platform
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      ConnectionStrings__Postgres: Host=postgres;Database=audit;Username=audit;Password=${AUDIT_DB_PASSWORD:?Run dev_setup.py};Maximum Pool Size=80
+      Keys__Audit__ActiveId: dev-v1
+      Keys__Audit__Versions__dev-v1: ${AUDIT_KEY:?Run dev_setup.py}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      dashboard:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - dotnet
+      - /health/FinancialFraudPlatform.HealthProbe.dll
+      - http://localhost:8080/health/ready
+      interval: 10s
+      timeout: 8s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+    ports:
+    - 127.0.0.1:8083:8080
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT: src/Web/FinancialFraudPlatform.Dashboard.Blazor/FinancialFraudPlatform.Dashboard.Blazor.csproj
+    image: financial-fraud-dashboard:dev
+    command:
+    - FinancialFraudPlatform.Dashboard.Blazor.dll
+    networks:
+    - backend
+    - observability
+    - edge
+    read_only: true
+    tmpfs:
+    - /tmp:rw,nosuid,size=128m
+    security_opt:
+    - no-new-privileges:true
+    cap_drop:
+    - ALL
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ENVIRONMENT: Development
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: fraud
+      RabbitMQ__Password: ${RABBITMQ_PASSWORD:?Run dev_setup.py}
+      Identity__Authority: http://localhost:8080/realms/fraud
+      Identity__InternalOrigin: http://keycloak:8080
+      Identity__Audience: fraud-platform
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      ConnectionStrings__Postgres: Host=postgres;Database=dashboard;Username=dashboard;Password=${DASHBOARD_DB_PASSWORD:?Run dev_setup.py};Maximum
+        Pool Size=80
+      Identity__ClientId: fraud-dashboard
+      Identity__ClientSecret: ${DASHBOARD_CLIENT_SECRET:?Run dev_setup.py}
+      DataProtection__Path: /keys
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - dotnet
+      - /health/FinancialFraudPlatform.HealthProbe.dll
+      - http://localhost:8080/health/ready
+      interval: 10s
+      timeout: 8s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+    ports:
+    - 127.0.0.1:8084:8080
+    volumes:
+    - dashboard-keys:/keys
+  model-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT: tools/FinancialFraudPlatform.ModelTraining/FinancialFraudPlatform.ModelTraining.csproj
+    image: financial-fraud-model-init:dev
+    command:
+    - FinancialFraudPlatform.ModelTraining.dll
+    - --demo
+    - --out
+    - /models
+    networks:
+    - backend
+    read_only: true
+    tmpfs:
+    - /tmp:rw,nosuid,size=128m
+    security_opt:
+    - no-new-privileges:true
+    cap_drop:
+    - ALL
+    volumes:
+    - model-data:/models
+    restart: 'no'
+networks:
+  edge: {}
+  backend:
+    internal: true
+  observability:
+    internal: true
+volumes:
+  postgres-data: {}
+  redis-data: {}
+  rabbitmq-data: {}
+  model-data: {}
+  dashboard-keys: {}
+  prometheus-data: {}
+  grafana-data: {}

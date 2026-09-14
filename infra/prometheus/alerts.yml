@@ -1,0 +1,17 @@
+groups:
+  - name: fraud-platform
+    rules:
+      - alert: FraudInferenceBudgetExceeded
+        expr: histogram_quantile(0.99, sum by (le) (rate(fraud_inference_duration_milliseconds_bucket[5m]))) > 15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Fraud inference p99 exceeds the 15 ms target
+      - alert: FraudPipelineDelayed
+        expr: histogram_quantile(0.99, sum by (le) (rate(fraud_pipeline_duration_milliseconds_bucket[5m]))) > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Fraud scoring pipeline p99 exceeds one second
