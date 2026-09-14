@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><IsTestProject>true</IsTestProject><IsPackable>false</IsPackable></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Services/Ingestion/FinancialFraudPlatform.Ingestion.Domain/FinancialFraudPlatform.Ingestion.Domain.csproj" />
+    <ProjectReference Include="../../src/Services/Ingestion/FinancialFraudPlatform.Ingestion.Application/FinancialFraudPlatform.Ingestion.Application.csproj" />
+    <ProjectReference Include="../../src/Services/Security/FinancialFraudPlatform.Security.Shield/FinancialFraudPlatform.Security.Shield.csproj" />
+    <ProjectReference Include="../../src/Services/Detection/FinancialFraudPlatform.Detection.FeatureStore/FinancialFraudPlatform.Detection.FeatureStore.csproj" />
+    <ProjectReference Include="../../src/Services/Detection/FinancialFraudPlatform.Detection.ML/FinancialFraudPlatform.Detection.ML.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+    <PackageReference Include="FluentAssertions" />
+  </ItemGroup>
+</Project>
