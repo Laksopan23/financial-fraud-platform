@@ -1,0 +1,90 @@
+@page "/"
+@attribute [Authorize(Policy = "Analyst")]
+@implements IAsyncDisposable
+@inject ISender Sender
+@inject AlertFeed Feed
+@inject AuthenticationStateProvider Authentication
+
+<PageTitle>Fraud Control | Risk alerts</PageTitle>
+<header><a class="brand" href="/">F<span>Fraud Control</span></a><span class="tenant">@tenant</span></header>
+<main>
+    <div class="heading"><div><p class="eyebrow">ANALYST WORKSPACE</p><h1>Risk alerts</h1><p>Review the latest transactions that need attention.</p></div><span class="live">● Live updates</span></div>
+    @if (alerts.Any(a => a.SyntheticDemo))
+    { <div class="notice">Demonstration model · Scores are based on synthetic training data.</div> }
+    @if (error is not null) { <div role="alert" class="notice">@error</div> }
+    <section class="metrics" aria-label="Latest alerts summary">
+        <article><span>Latest alerts</span><strong>@alerts.Count</strong><small>Up to 100 recent decisions</small></article>
+        <article><span>Critical risk</span><strong class="critical">@alerts.Count(x => x.Tier == RiskTier.Critical)</strong><small>Priority review</small></article>
+        <article><span>Medium risk</span><strong class="medium">@alerts.Count(x => x.Tier == RiskTier.Medium)</strong><small>Needs attention</small></article>
+    </section>
+    <section class="panel">
+        <div class="toolbar"><h2>Transaction feed</h2><label>Risk level <select @bind="filter"><option value="all">All alerts</option><option value="Critical">Critical</option><option value="Medium">Medium</option></select></label></div>
+        @if (alerts.Count == 0)
+        { <div class="empty"><h3>Waiting for risk alerts</h3><p>Transactions appear here when their score reaches the review threshold.</p></div> }
+        else
+        {
+            <div class="table-wrap"><table><thead><tr><th>Transaction</th><th>Risk</th><th>Model score</th><th>Scored at (UTC)</th><th>Evidence</th></tr></thead><tbody>
+            @foreach (var alert in alerts.Where(x => filter == "all" || x.Tier.ToString() == filter))
+            {
+                <tr @key="alert.Id"><td class="mono">@alert.TransactionId.ToString()[..8]…</td><td><span class="pill @alert.Tier.ToString().ToLowerInvariant()">@alert.Tier</span></td><td>@alert.Probability.ToString("P1")</td><td>@alert.ScoredAt.UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss")</td><td><button @onclick="() => selected = alert">View record</button></td></tr>
+            }
+            </tbody></table></div>
+        }
+    </section>
+    @if (selected is not null)
+    {
+        <section class="panel evidence"><div class="toolbar"><h2>Decision evidence</h2><button @onclick="() => selected = null">Close</button></div><dl><dt>Transaction</dt><dd>@selected.TransactionId</dd><dt>Model version</dt><dd>@selected.ModelVersion</dd><dt>Audit signature</dt><dd>@selected.AuditHash</dd></dl><p>Use the audit service to verify the signed decision and its ledger chain.</p></section>
+    }
+    <p class="footnote">Scores support analyst review. They do not automatically block or approve payments.</p>
+</main>
+
+@code {
+    private string tenant = "", filter = "all";
+    private string? error;
+    private List<AlertReadModel> alerts = [];
+    private AlertReadModel? selected;
+    private readonly CancellationTokenSource lifetime = new();
+    private Guid subscription;
+    private Task listener = Task.CompletedTask, poller = Task.CompletedTask;
+    protected override async Task OnInitializedAsync()
+    {
+        tenant = (await Authentication.GetAuthenticationStateAsync()).User.RequireTenant();
+        var feed = Feed.Subscribe(tenant); subscription = feed.Id;
+        await RefreshAsync();
+        listener = ListenAsync(feed.Reader); poller = PollAsync();
+    }
+    private async Task RefreshAsync()
+    {
+        try { alerts = (await Sender.Send(new AlertsQuery(tenant), lifetime.Token)).ToList(); error = null; }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
+        catch { error = "Alerts could not be refreshed. Retrying shortly."; }
+    }
+    private async Task ListenAsync(System.Threading.Channels.ChannelReader<AlertReadModel> reader)
+    {
+        try
+        {
+            await foreach (var value in reader.ReadAllAsync(lifetime.Token))
+                await InvokeAsync(() =>
+                {
+                    alerts.RemoveAll(x => x.Id == value.Id); alerts.Add(value);
+                    alerts = alerts.OrderByDescending(x => x.ScoredAt).Take(100).ToList(); StateHasChanged();
+                });
+        }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
+    }
+    private async Task PollAsync()
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(15));
+            while (await timer.WaitForNextTickAsync(lifetime.Token))
+                await InvokeAsync(async () => { await RefreshAsync(); StateHasChanged(); });
+        }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
+    }
+    public async ValueTask DisposeAsync()
+    {
+        lifetime.Cancel(); Feed.Unsubscribe(subscription);
+        await Task.WhenAll(listener, poller); lifetime.Dispose();
+    }
+}

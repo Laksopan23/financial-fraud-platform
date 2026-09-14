@@ -1,0 +1,9 @@
+<Router AppAssembly="typeof(Program).Assembly">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="routeData">
+            <NotAuthorized><main><h1>Session expired</h1><a href="/login">Sign in to continue</a></main></NotAuthorized>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+    <NotFound><main><h1>Page unavailable</h1><a href="/">Return to alerts</a></main></NotFound>
+</Router>

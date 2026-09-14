@@ -1,0 +1,22 @@
+syntax = "proto3";
+option csharp_namespace = "FinancialFraudPlatform.Ingestion.Grpc";
+package fraud.v1;
+service TransactionGateway {
+  rpc Stream(stream TransactionInput) returns (stream TransactionReply);
+}
+message TransactionInput {
+  string transaction_id = 1;
+  string card_number = 2;
+  int64 amount_minor_units = 3;
+  string currency = 4;
+  string merchant_id = 5;
+  double latitude = 6;
+  double longitude = 7;
+  int64 occurred_at_unix_ms = 8;
+  string cardholder_name = 9;
+}
+message TransactionReply {
+  string transaction_id = 1;
+  string status = 2;
+  string error_code = 3;
+}

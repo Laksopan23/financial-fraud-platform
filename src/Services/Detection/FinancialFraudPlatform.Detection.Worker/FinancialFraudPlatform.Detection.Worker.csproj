@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="../../../BuildingBlocks/FinancialFraudPlatform.EventBus/FinancialFraudPlatform.EventBus.csproj" />
+    <ProjectReference Include="../FinancialFraudPlatform.Detection.FeatureStore/FinancialFraudPlatform.Detection.FeatureStore.csproj" />
+    <ProjectReference Include="../FinancialFraudPlatform.Detection.ML/FinancialFraudPlatform.Detection.ML.csproj" />
+    <ProjectReference Include="../../Security/FinancialFraudPlatform.Security.Shield/FinancialFraudPlatform.Security.Shield.csproj" />
+  </ItemGroup>
+</Project>
